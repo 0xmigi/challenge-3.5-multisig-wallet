@@ -29,9 +29,8 @@ import externalContracts from "./contracts/external_contracts";
 // contracts
 import deployedContracts from "./contracts/hardhat_contracts.json";
 import { Transactor, Web3ModalSetup } from "./helpers";
-import { Home, ExampleUI, Hints, Subgraph } from "./views";
-import { useStaticJsonRPC } from "./hooks";
-
+import { FrontPage, Owners, Streams, CreateTransaction, Transactions, Pool, userProvider } from "./views";
+import { useStaticJsonRPC, useUserProvider, useEventListener, useExternalContractLoader } from "./hooks";
 const { ethers } = require("ethers");
 /*
     Welcome to 🏗 scaffold-eth !
@@ -169,6 +168,10 @@ function App(props) {
   // keep track of a variable from the contract in the local React state:
   const purpose = useContractReader(readContracts, "YourContract", "purpose");
 
+  //📟 Listen for broadcast events
+  const setPurposeEvents = useEventListener(readContracts, "YourContract", "SetPurpose", localProvider, 1);
+  console.log("📟 SetPurpose events:",setPurposeEvents)
+
   /*
   const addressFromENS = useResolveName(mainnetProvider, "austingriffith.eth");
   console.log("🏷 Resolved austingriffith.eth as:",addressFromENS)
@@ -258,99 +261,141 @@ function App(props) {
       />
       <Menu style={{ textAlign: "center", marginTop: 40 }} selectedKeys={[location.pathname]} mode="horizontal">
         <Menu.Item key="/">
-          <Link to="/">App Home</Link>
+          <Link to="/">MultiSig</Link>
+        </Menu.Item>
+        <Menu.Item key="/owners">
+          <Link to="/owners">Owners</Link>
+        </Menu.Item>
+        <Menu.Item key="/streams">
+          <Link to="/streams">Streams</Link>
+        </Menu.Item>
+        <Menu.Item key="/create">
+          <Link to="/create">Create</Link>
+        </Menu.Item>
+        <Menu.Item key="/pool">
+          <Link to="/pool">Pool</Link>
         </Menu.Item>
         <Menu.Item key="/debug">
-          <Link to="/debug">Debug Contracts</Link>
-        </Menu.Item>
-        <Menu.Item key="/hints">
-          <Link to="/hints">Hints</Link>
-        </Menu.Item>
-        <Menu.Item key="/exampleui">
-          <Link to="/exampleui">ExampleUI</Link>
-        </Menu.Item>
-        <Menu.Item key="/mainnetdai">
-          <Link to="/mainnetdai">Mainnet DAI</Link>
-        </Menu.Item>
-        <Menu.Item key="/subgraph">
-          <Link to="/subgraph">Subgraph</Link>
+          <Link to="/debug">Debug</Link>
         </Menu.Item>
       </Menu>
 
       <Switch>
         <Route exact path="/">
-          {/* pass in any web3 props to this Home component. For example, yourLocalBalance */}
-          <Home yourLocalBalance={yourLocalBalance} readContracts={readContracts} />
-        </Route>
-        <Route exact path="/debug">
-          {/*
-                🎛 this scaffolding is full of commonly used components
-                this <Contract/> component will automatically parse your ABI
-                and give you a form to interact with it locally
-            */}
+            <FrontPage
+              // executeTransactionEvents={executeTransactionEvents}
+              // contractName={contractName}
+              // localProvider={localProvider}
+              // readContracts={readContracts}
+              price={price}
+              mainnetProvider={mainnetProvider}
+              blockExplorer={blockExplorer}
+            />
+          </Route>
+          <Route exact path="/streams">
+            <Streams
+              // contractName={contractName}
+              // address={address}
+              // userProvider={userProvider}
+              // mainnetProvider={mainnetProvider}
+              // localProvider={localProvider}
+              // yourLocalBalance={yourLocalBalance}
+              // price={price}
+              // tx={tx}
+              // writeContracts={writeContracts}
+              // readContracts={readContracts}
+              // blockExplorer={blockExplorer}
+              // nonce={nonce}
+              // withdrawStreamEvents={withdrawStreamEvents}
+              // openStreamEvents={openStreamEvents}
+              // signaturesRequired={signaturesRequired}
+            />
 
-          <Contract
-            name="YourContract"
-            price={price}
-            signer={userSigner}
-            provider={localProvider}
-            address={address}
-            blockExplorer={blockExplorer}
-            contractConfig={contractConfig}
-          />
-        </Route>
-        <Route path="/hints">
-          <Hints
-            address={address}
-            yourLocalBalance={yourLocalBalance}
-            mainnetProvider={mainnetProvider}
-            price={price}
-          />
-        </Route>
-        <Route path="/exampleui">
-          <ExampleUI
-            address={address}
-            userSigner={userSigner}
-            mainnetProvider={mainnetProvider}
-            localProvider={localProvider}
-            yourLocalBalance={yourLocalBalance}
-            price={price}
-            tx={tx}
-            writeContracts={writeContracts}
-            readContracts={readContracts}
-            purpose={purpose}
-          />
-        </Route>
-        <Route path="/mainnetdai">
-          <Contract
-            name="DAI"
-            customContract={mainnetContracts && mainnetContracts.contracts && mainnetContracts.contracts.DAI}
-            signer={userSigner}
-            provider={mainnetProvider}
-            address={address}
-            blockExplorer="https://etherscan.io/"
-            contractConfig={contractConfig}
-            chainId={1}
-          />
-          {/*
+
+            { /* uncomment for a second contract:
             <Contract
-              name="UNI"
-              customContract={mainnetContracts && mainnetContracts.contracts && mainnetContracts.contracts.UNI}
-              signer={userSigner}
+              name="SecondContract"
+              signer={userProvider.getSigner()}
+              provider={localProvider}
+              address={address}
+              blockExplorer={blockExplorer}
+            />
+            */ }
+
+            { /* Uncomment to display and interact with an external contract (DAI on mainnet):
+            <Contract
+              name="DAI"
+              customContract={mainnetDAIContract}
+              signer={userProvider.getSigner()}
               provider={mainnetProvider}
               address={address}
-              blockExplorer="https://etherscan.io/"
+              blockExplorer={blockExplorer}
             />
-            */}
-        </Route>
-        <Route path="/subgraph">
-          <Subgraph
-            subgraphUri={props.subgraphUri}
-            tx={tx}
-            writeContracts={writeContracts}
-            mainnetProvider={mainnetProvider}
-          />
-        </Route>
+            */ }
+          </Route>
+          <Route exact path="/owners">
+            <Owners
+              // contractName={contractName}
+              // address={address}
+              // userProvider={userProvider}
+              // mainnetProvider={mainnetProvider}
+              // localProvider={localProvider}
+              // yourLocalBalance={yourLocalBalance}
+              // price={price}
+              // tx={tx}
+              // writeContracts={writeContracts}
+              // readContracts={readContracts}
+              // blockExplorer={blockExplorer}
+              // nonce={nonce}
+              // ownerEvents={ownerEvents}
+              // signaturesRequired={signaturesRequired}
+            />
+          </Route>
+          <Route path="/create">
+            <CreateTransaction
+              // poolServerUrl={poolServerUrl}
+              // contractName={contractName}
+              // address={address}
+              // userProvider={userProvider}
+              // mainnetProvider={mainnetProvider}
+              // localProvider={localProvider}
+              // yourLocalBalance={yourLocalBalance}
+              // price={price}
+              // tx={tx}
+              // writeContracts={writeContracts}
+              // readContracts={readContracts}
+              // setRoute={setRoute}
+            />
+          </Route>
+          <Route path="/pool">
+            <Transactions
+              // poolServerUrl={poolServerUrl}
+              // contractName={contractName}
+              // address={address}
+              // userProvider={userProvider}
+              // mainnetProvider={mainnetProvider}
+              // localProvider={localProvider}
+              // yourLocalBalance={yourLocalBalance}
+              // price={price}
+              // tx={tx}
+              // writeContracts={writeContracts}
+              // readContracts={readContracts}
+              // blockExplorer={blockExplorer}
+              // nonce={nonce}
+              // signaturesRequired={signaturesRequired}
+            />
+          </Route>
+          <Route path="/debug">
+            <Contract
+              name="StreamingMetaMultiSigWallet"
+              // signer={userProvider.getSigner()}
+              provider={localProvider}
+              address={address}
+              blockExplorer={blockExplorer}
+              purpose={purpose}
+              setPurposeEvents={setPurposeEvents}
+            />
+          </Route>
       </Switch>
 
       <ThemeSwitch />
